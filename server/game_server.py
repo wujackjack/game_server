@@ -23,12 +23,9 @@ class Server(object):
     _state2func = {}
 
     _WAIT = 0
-    _WAIT_SIGNIN = 1 # wait_signin -> wait_pw -> success 
-    _WAIT_PW = 2
+    _WAIT_SIGNIN = 1 # wait_signin -> success 
     _SUCCESS = 3
-    _WAIT_SIGNUP = 4 # wait_signup -> wait_pw1 -> wait_pw2 -> success
-    _WAIT_PW1 = 5
-    _WAIT_PW2 = 6
+    _WAIT_SIGNUP = 4 # wait_signup -> success
     _EVENT_NEW_CLIENT = 7
     _EVENT_INFO = 8
     _EVENT_PLAYER_OUT = 9
