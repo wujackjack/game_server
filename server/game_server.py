@@ -65,9 +65,6 @@ class Server(object):
         state2func[self._WAIT] = self.wait
         state2func[self._WAIT_SIGNIN] = self.wait_signin
         state2func[self._WAIT_SIGNUP] = self.wait_signup
-        state2func[self._WAIT_PW] = self.wait_pw
-        state2func[self._WAIT_PW1] = self.wait_pw1
-        state2func[self._WAIT_PW2] = self.wait_pw2
         state2func[self._SUCCESS] = self.routine
         return state2func
 
@@ -206,133 +203,65 @@ class Server(object):
             self._id2client[tmp_id].state = self._WAIT_SIGNIN
             self.send(tmp_id, \
                 'Please enter user name.\n\r')
-            self.send(tmp_id, 'Name: \n\r')
+            self.send(tmp_id, 'Signin Name: \n\r')
 
         # choose to signin
         elif content == "signup":
             self._id2client[tmp_id].state = self._WAIT_SIGNUP
             self.send(tmp_id, \
                 'Please enter new user name.\n\r')
-            self.send(tmp_id, 'Name: \n\r')
+            self.send(tmp_id, 'Signup Name: \n\r')
 
         # invalid command
         elif content:
             self.send(tmp_id, "Invalid command\n")
             self.print_wait(tmp_id)
-    
+   
     def wait_signin(self, tmp_id, content):
         # prev_state: wait
-        # cur_state: wait_signin , to input user_name
-        # next_state: wait_pw
+        # cur_state: wait_signin
+        # next_state: success
 
-        if not content:
-            self.send(tmp_id, \
-                'Username can not be null. Please re-enter.\n\r')
-            self.send(tmp_id, "Name: \n\r")
-            return
-
-        if content not in self._player_data:
+        name, pw = (content.split("\t", 1) + ["", ""])[0:2]
+        if name not in self._player_data:
             self.send(tmp_id, \
                 'Username does not exist in database.\n\r')
             self.print_wait(tmp_id)
             self._id2client[tmp_id].state = self._WAIT
             return None
-        '''
-        if tmp_id in self._id2names:
+        self._id2client[tmp_id].name = name
+        if self._player_data[self._id2client[tmp_id].name]["pw"] != \
+                pw:
             self.send(tmp_id, \
-                'User has login on other client.\n\r')
+                'Wrong password. Please re-login or create new account\n\r')
             self.print_wait(tmp_id)
             self._id2client[tmp_id].state = self._WAIT
             return None
-        '''
-        self._id2client[tmp_id].name = content
+
         self.send(tmp_id, \
-                'Please enter password.\n\r')
-        self.send(tmp_id, 'Password:\n\r')
-        self._id2client[tmp_id].state = self._WAIT_PW
-        return content
+            'You have successfully login.\n\r')
+        self.send(tmp_id, \
+            'Type "help" to see command lists\n\r')
+
+        self.announce_in(self._id2client[tmp_id].name)
+        self._id2client[tmp_id].login_time = time.time()
+        self._id2names[tmp_id] = self._id2client[tmp_id].name
+        self._id2client[tmp_id].state = self._SUCCESS
 
     def wait_signup(self, tmp_id, content):
         # prev_state: wait
-        # cur_state: wait_signup , to input user name
-        # next_state: wait_pw1
+        # cur_state: wait_signup
+        # next_state: success
 
-        if not content:
-            self.send(tmp_id, \
-                'Username can not be null. Please re-enter.\n\r')
-            self.send(tmp_id, "Name: \n\r")
-            return
-
-        if content in self._player_data:
+        name, pw1, pw2 = (content.split("\t", 2) + ["", "", ""])[0:3]
+        if name in self._player_data:
             self.send(tmp_id, \
                 'Username already exists in database.\n\r')
             self.print_wait(tmp_id)
             self._id2client[tmp_id].state = self._WAIT
             return None
-        self._id2client[tmp_id].new_name = content
-        self.send(tmp_id, \
-                'Please enter new password.\n\r')
-        self.send(tmp_id, 'Password: \n\r')
-        self._id2client[tmp_id].state = self._WAIT_PW1
-        return content
-
-    def wait_pw(self, tmp_id, content):
-        # prev_state: wait_signin
-        # cur_state: wait_pw , to input password
-        # next_state: success
-        
-        if not content:
-            self.send(tmp_id, \
-                'Password can not be null. Please re-enter.\n\r')
-            self.send(tmp_id, "Password: \n\r")
-            return
-
-        if self._player_data[self._id2client[tmp_id].name]["pw"] == \
-                content:
-            self.send(tmp_id, \
-                'You have successfully login.\n\r')
-            self.send(tmp_id, \
-                'Type "help" to see command lists\n\r')
-            self.announce_in(self._id2client[tmp_id].name)
-            self._id2client[tmp_id].login_time = time.time()
-            self._id2names[tmp_id] = self._id2client[tmp_id].name
-            self._id2client[tmp_id].state = self._SUCCESS
-        else:
-            self.send(tmp_id, \
-                'Wrong password. Please re-login or create new account\n\r')
-            self._id2client[tmp_id].name = None
-            self.print_wait(tmp_id)
-            self._id2client[tmp_id].state = self._WAIT
-
-    def wait_pw1(self, tmp_id, content):
-        # prev_state: wait_signup
-        # cur_state: wait_pw1 , to input password first time
-        # next_state: wait_pw2
-
-        if not content:
-            self.send(tmp_id, \
-                'Password can not be null. Please re-enter.\n\r')
-            self.send(tmp_id, "Password: \n\r")
-            return
-
-        self._id2client[tmp_id].pw1 = content
-        self.send(tmp_id, \
-                'Please enter new password again.\n\r')
-        self.send(tmp_id, 'Password: \n\r')
-        self._id2client[tmp_id].state = self._WAIT_PW2
-
-    def wait_pw2(self, tmp_id, content):
-        # prev_state: wait_pw1
-        # cur_state: wait_pw2 , to input password second time
-        # next_state: success
-
-        if not content:
-            self.send(tmp_id, \
-                'Password can not be null. Please re-enter.\n\r')
-            self.send(tmp_id, "Password: \n\r")
-            return
-
-        if self._id2client[tmp_id].pw1 != content:
+        self._id2client[tmp_id].new_name = name
+        if pw1 != pw2:
             self.send(tmp_id, 'Password aren\'t consistent.\n\r')
             self._id2client[tmp_id].new_name = None 
             self._id2client[tmp_id].pw1 = None 
@@ -340,7 +269,7 @@ class Server(object):
             self._id2client[tmp_id].state = self._WAIT
             return 
         new_player = {"total_time" : 0, \
-                      "pw" : self._id2client[tmp_id].pw1, \
+                      "pw" : pw1, \
                       "last_time" : 0}
         self._player_data[self._id2client[tmp_id].new_name] = new_player
         self.update_file()
@@ -352,8 +281,8 @@ class Server(object):
         self.announce_in(self._id2client[tmp_id].name)
         self._id2client[tmp_id].login_time = time.time()
         self._id2names[tmp_id] = self._id2client[tmp_id].name
-        self._id2client[tmp_id].state = self._SUCCESS
-
+        self._id2client[tmp_id].state = self._SUCCESS    
+    
     def routine(self, tmp_id, content):
         # cur_state: success, to handle chat, history and exit
 

@@ -27,10 +27,12 @@ if __name__ == "__main__":
             # go through any commands
             for tmp_id, content in ms.get_commands():
                 ms._state2func[ms._id2client[tmp_id].state](tmp_id, content)
-    except Exception:
+        '''
+        except Exception, argv:
+        print argv
         print "server_close"
         ms.server_close()
-
+        '''
     except KeyboardInterrupt:
         print "server_close"
         ms.server_close()

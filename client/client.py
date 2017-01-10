@@ -8,9 +8,47 @@ import socket, select
 import sys, threading, signal
 import getpass
 
+_NORMAL = 0
+_SIGNIN = 1
+_SIGNUP = 2
+mode = _NORMAL
+
 def receive(client, address):
+    global mode
+    command = ""
     while True:
-        command = raw_input('')
+        if mode == _NORMAL:
+            command = raw_input('')
+        if mode == _SIGNIN:
+            name = command
+            while not name:
+                print "Username can not be null. Please re-enter.\nSignin Name:",
+                name = raw_input('')
+            print "Please enter password."
+            pw = getpass.getpass()
+            while not pw:
+                print "Password can not be null. Please re-enter.\n"
+                pw = getpass.getpass()
+            command = name + "\t" + pw
+            mode  = _NORMAL
+        if mode == _SIGNUP:
+            name = command
+            while not name:
+                print "Username can not be null. Please re-enter.\nSignin Name:",
+                name = raw_input('')
+            print "Please enter new password."
+            pw1 = getpass.getpass()
+            while not pw1:
+                print "Password can not be null. Please re-enter.\n"
+                pw1 = getpass.getpass()
+            print "Please enter new password again."
+            pw2 = getpass.getpass()
+            while not pw2:
+                print "Password can not be null. Please re-enter.\n"
+                pw2 = getpass.getpass()
+
+            command = name + "\t" + pw1 + '\t' + pw2
+            mode = _NORMAL
         try:
             client.send(command + '\n')
         except socket.error:
@@ -51,6 +89,10 @@ if __name__ == "__main__":
             info = client.recv(2048)
             if info:
                 sys.stdout.write(info)
+                if "Signin" in info:
+                    mode = _SIGNIN
+                elif "Signup" in info:
+                    mode = _SIGNUP
         except socket.error:
             break
         except socket.timeout:
