@@ -5,7 +5,7 @@ Email: wuzhongjun1992@126.com
 '''
 
 import socket, select
-import sys, threading, signal
+import sys, threading, signal, time
 import getpass
 
 _NORMAL = 0
@@ -18,6 +18,7 @@ def receive(client, address):
     global mode
     while (True):
     # mainloop for information from server
+        time.sleep(0.01)
         readlist, writelist, exceptlist = \
             select.select([client], [], [], 0)
         if client not in readlist:
@@ -61,6 +62,7 @@ if __name__ == "__main__":
     # main loop that handle client input 
     # three states include normal, signin, signup
     while (True):
+        time.sleep(0.01)
         command = ""
         try:
             if mode == _NORMAL:
