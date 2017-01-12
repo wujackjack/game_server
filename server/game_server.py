@@ -308,8 +308,7 @@ class Server(object):
         self.update_file()
         self._id2client[tmp_id].name = self._id2client[tmp_id].new_name
         self.send(tmp_id, \
-            'You have successfully created an account and login. \
-            You are in game lobby.\n\r')
+            'You have successfully created an account and login. You are in game lobby.\n\r')
         self.send(tmp_id, \
             'Type "help" to see command lists\n\r')
         self.announce_in(self._id2client[tmp_id].name)

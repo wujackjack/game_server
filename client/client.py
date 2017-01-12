@@ -25,7 +25,7 @@ def receive(client, address):
             continue
         try:
             info = client.recv(2048)
-            if info:
+            if info != '\x00':
                 sys.stdout.write(info)
                 if "Signin" in info:
                     mode = _SIGNIN
